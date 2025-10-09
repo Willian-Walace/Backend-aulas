@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const orders = await Order.find({ 
+        const orders = await Ordem.find({ 
             status: { $ne: 'pronto' } 
         });
         res.status(200).json(orders); 
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
 
 router.get('/todos', async (req, res) => {
     try {
-        const orders = await Order.find(); 
+        const orders = await Ordem.find(); 
         res.status(200).json(orders);
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar os pedidos', error });

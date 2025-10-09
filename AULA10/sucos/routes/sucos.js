@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const juices = await Juice.find();
+        const juices = await Sucos.find();
         res.status(200).json(juices); 
     } catch (error) {
         res.status(500).json({ message: 'Erro ao buscar os sucos', error }); 
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { sabor, quantidade, quantidadeEmEstoque } = req.body; 
     try {
-        const updatedJuice = await Juice.findByIdAndUpdate(
+        const updatedJuice = await Sucos.findByIdAndUpdate(
             req.params.id, 
             { sabor, quantidade, quantidadeEmEstoque }, 
             { new: true }
