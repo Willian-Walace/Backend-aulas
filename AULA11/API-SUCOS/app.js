@@ -32,7 +32,6 @@ db.exec(`
     FOREIGN KEY (suco_id) REFERENCES sucos(id)
     );`);
 
-
 // Schemas validação
 const SucoCreateSchema = z.object({
     nome: z.string().min(1,"nome é obrigatório"),
