@@ -6,12 +6,10 @@ const helmet = require("helmet"); // biblioteca para segurança
 const morgan = require("morgan"); // biblioteca para registrar logs
 const {z} = require("zod"); // biblioteca para validar dados
 
-
 const app = express() ; // armazena o servidor em app
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("dev"));
-
 
 // Banco de dados SQLITE
 const db = new Database("./sucos.db");
@@ -51,8 +49,6 @@ const PedidosStatusSchema = z.object({
     status: z.enum(["iniciado","em_processamento","pronto"])
 });
 
-
-
 // Rotas
 
 // Post para cadastrar o sabor do suco /cadastro-suco
@@ -67,7 +63,7 @@ app.post("/cadastro-suco",(req,res)=>{
    try{
     const stmt = db.prepare("INSERT INTO sucos (nome,preco) VALUES(?,?)"); // prepara os campos para receber os dados
     const info = stmt.run(nome.trim(),preco);
-    const suco =db.prepare("SELECT *FROM sucos WHERE id = ?").get(info.lastInsertRowid);
+    const suco = db.prepare("SELECT * FROM sucos WHERE id = ?").get(info.lastInsertRowid);
     return res.status(201).json(suco);
    }catch(e){
     if(String(e).includes("UNIQUE")){
@@ -77,7 +73,6 @@ app.post("/cadastro-suco",(req,res)=>{
    }
 
 });
-
 
 // Rota Get para exibir os sucos cadastrados
 app.get("/cadastro-suco",(_req,res) =>{
@@ -92,7 +87,7 @@ app.get("/cadastro-suco",(_req,res) =>{
 app.post("/pedidos",(req,res)=>{
     const parse = PedidoCreateSchema.safeParse(req.body);
     if(!parse.success){
-        return res.status(400).json({erro: parse.erro});
+        return res.status(400).json({erro: parse.error});
     }
 
     let {suco_id,sabor,quantidade} = parse.data;
@@ -111,7 +106,7 @@ app.post("/pedidos",(req,res)=>{
         return res.status(400).json({erro: "Informe 'suco_id' ou 'sabor' "});
     }
 
-    if(!suco_id){
+    if(suco_id){
         const sucoExiste = db.prepare("SELECT id FROM sucos WHERE id =?").get(suco_id);
         if(!sucoExiste){
             return res.status(404).json({erro: "Suco não encontrado !"});
@@ -132,7 +127,6 @@ app.post("/pedidos",(req,res)=>{
     }
 });
 
-
 // PATCH rota para atualizar o pedido - rota de produção
 // ordem-producao/:id -> altera o status do pedido (em processamento, pronto, iniciado)
 app.patch("/ordem-producao/:id",(req,res)=>{
@@ -149,9 +143,8 @@ app.patch("/ordem-producao/:id",(req,res)=>{
     }
 
     const now = new Date().toISOString();
-    const upd = db.prepare("UPDATE pedidos SET status =?, atualizado em = ?, WHERE id = ?");
+    const upd = db.prepare("UPDATE pedidos SET status =?, atualizado_em = ? WHERE id = ?");
     upd.run(status,now,id);
-
 
     const atualizado = db.prepare(`
         SELECT p.id, p.quantidade, p.status, p.criado_em, p.atualizado_em,
@@ -163,7 +156,6 @@ app.patch("/ordem-producao/:id",(req,res)=>{
 
         return res.json(atualizado);
 });
-
 
 // Rota para listar os pedidos
 // GET /listar-pedidos -> por padrão lista os produtos em andamento (status != pronto)
@@ -193,11 +185,10 @@ app.get("/listar-pedidos",(req,res)=>{
             JOIN sucos s ON s.id = p.suco_id
             WHERE p.status != 'pronto'
             ORDER BY p.criado_em DESC            
-            `).all(status);
+            `).all();
     }
     return res.json(rows);
 })
-
 
 
 app.get("/",(_req,res)=> res.send("API Sucos OK !"));
@@ -207,4 +198,3 @@ const PORT = process.env.PORT|| 3000;
 app.listen(PORT,()=>{
     console.log(`API rodando em http://localhost:${PORT}`);
 });
-
